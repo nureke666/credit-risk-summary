@@ -1,0 +1,334 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Динамика долей риска и структура портфеля по сроку просрочки",
+  "hconcat": [
+    {
+      "title": "Доли риска в портфеле",
+      "data": {
+        "url": "data/summary.json"
+      },
+      "transform": [
+        {
+          "fold": [
+            "par30_share",
+            "par90_share",
+            "npl_share",
+            "top10_share"
+          ],
+          "as": [
+            "metric",
+            "value"
+          ]
+        },
+        {
+          "lookup": "metric",
+          "from": {
+            "data": {
+              "values": [
+                {
+                  "metric": "par30_share",
+                  "label": "PAR30",
+                  "order": 1
+                },
+                {
+                  "metric": "par90_share",
+                  "label": "PAR90",
+                  "order": 2
+                },
+                {
+                  "metric": "npl_share",
+                  "label": "NPL",
+                  "order": 3
+                },
+                {
+                  "metric": "top10_share",
+                  "label": "Топ-10 групп",
+                  "order": 4
+                }
+              ]
+            },
+            "key": "metric",
+            "fields": [
+              "label",
+              "order"
+            ]
+          }
+        },
+        {
+          "calculate": "utcFormat(toDate(datum.report_date), '%d.%m.%Y')",
+          "as": "date_label"
+        },
+        {
+          "calculate": "datum.label + ' ' + format(datum.value, '.1%')",
+          "as": "point_label"
+        }
+      ],
+      "width": 460,
+      "height": 280,
+      "encoding": {
+        "x": {
+          "field": "date_label",
+          "type": "ordinal",
+          "sort": null,
+          "title": null,
+          "axis": {
+            "labelAngle": 0
+          },
+          "scale": {
+            "padding": 0.5
+          }
+        },
+        "y": {
+          "field": "value",
+          "type": "quantitative",
+          "title": null,
+          "axis": {
+            "format": ".0%",
+            "tickCount": 5
+          }
+        },
+        "color": {
+          "field": "label",
+          "type": "nominal",
+          "title": null,
+          "sort": [
+            "PAR30",
+            "PAR90",
+            "NPL",
+            "Топ-10 групп"
+          ],
+          "scale": {
+            "range": [
+              "#2a78d6",
+              "#eb6834",
+              "#1baf7a",
+              "#eda100"
+            ]
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "line",
+            "strokeWidth": 2
+          }
+        },
+        {
+          "mark": {
+            "type": "point",
+            "filled": true,
+            "size": 80,
+            "stroke": "#fcfcfb",
+            "strokeWidth": 2,
+            "opacity": 1
+          },
+          "encoding": {
+            "tooltip": [
+              {
+                "field": "label",
+                "title": "Показатель"
+              },
+              {
+                "field": "date_label",
+                "title": "Дата среза"
+              },
+              {
+                "field": "value",
+                "title": "Доля портфеля",
+                "format": ".2%"
+              }
+            ]
+          }
+        },
+        {
+          "transform": [
+            {
+              "filter": "datum.prev_report_date != null && datum.label !== 'NPL'"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 10,
+            "dy": -6,
+            "fontSize": 11,
+            "color": "#52514e"
+          },
+          "encoding": {
+            "text": {
+              "field": "point_label"
+            },
+            "color": {
+              "value": "#52514e"
+            }
+          }
+        },
+        {
+          "transform": [
+            {
+              "filter": "datum.prev_report_date != null && datum.label === 'NPL'"
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 10,
+            "dy": 8,
+            "fontSize": 11,
+            "color": "#52514e"
+          },
+          "encoding": {
+            "text": {
+              "field": "point_label"
+            },
+            "color": {
+              "value": "#52514e"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Портфель по сроку просрочки, млрд ₸",
+      "data": {
+        "url": "data/by_segment.json"
+      },
+      "transform": [
+        {
+          "filter": "datum.dimension === 'dpd_bucket'"
+        },
+        {
+          "calculate": "utcFormat(toDate(datum.report_date), '%d.%m.%Y')",
+          "as": "date_label"
+        },
+        {
+          "calculate": "datum.portfolio_kzt / 1e9",
+          "as": "portfolio_bn"
+        },
+        {
+          "calculate": "indexof(['без просрочки', '1–30 дней', '31–90 дней', 'более 90 дней'], datum.segment)",
+          "as": "bucket_order"
+        }
+      ],
+      "width": 300,
+      "height": 280,
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "width": 56,
+            "stroke": "#fcfcfb",
+            "strokeWidth": 2
+          },
+          "encoding": {
+            "x": {
+              "field": "date_label",
+              "type": "ordinal",
+              "sort": null,
+              "title": null,
+              "axis": {
+                "labelAngle": 0
+              }
+            },
+            "y": {
+              "field": "portfolio_bn",
+              "type": "quantitative",
+              "title": null,
+              "stack": "zero",
+              "axis": {
+                "format": ",.0f"
+              }
+            },
+            "color": {
+              "field": "segment",
+              "type": "ordinal",
+              "title": "Просрочка",
+              "sort": [
+                "без просрочки",
+                "1–30 дней",
+                "31–90 дней",
+                "более 90 дней"
+              ],
+              "scale": {
+                "range": [
+                  "#86b6ef",
+                  "#3987e5",
+                  "#1c5cab",
+                  "#0d366b"
+                ]
+              }
+            },
+            "order": {
+              "field": "bucket_order",
+              "sort": "ascending"
+            },
+            "tooltip": [
+              {
+                "field": "date_label",
+                "title": "Дата среза"
+              },
+              {
+                "field": "segment",
+                "title": "Просрочка"
+              },
+              {
+                "field": "portfolio_bn",
+                "title": "Сумма, млрд ₸",
+                "format": ",.1f"
+              },
+              {
+                "field": "portfolio_share",
+                "title": "Доля портфеля",
+                "format": ".1%"
+              }
+            ]
+          }
+        },
+        {
+          "transform": [
+            {
+              "aggregate": [
+                {
+                  "op": "sum",
+                  "field": "portfolio_bn",
+                  "as": "total_bn"
+                }
+              ],
+              "groupby": [
+                "date_label"
+              ]
+            }
+          ],
+          "mark": {
+            "type": "text",
+            "dy": -8,
+            "fontSize": 11,
+            "color": "#52514e"
+          },
+          "encoding": {
+            "x": {
+              "field": "date_label",
+              "type": "ordinal",
+              "sort": null
+            },
+            "y": {
+              "field": "total_bn",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": "total_bn",
+              "format": ",.1f"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "spacing": 48,
+  "resolve": {
+    "scale": {
+      "color": "independent"
+    }
+  }
+}

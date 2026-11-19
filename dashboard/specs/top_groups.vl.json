@@ -1,0 +1,112 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Десять крупнейших групп связанных заёмщиков на последнюю дату среза",
+  "data": {
+    "url": "data/top_groups.json"
+  },
+  "transform": [
+    {
+      "calculate": "time(toDate(datum.report_date))",
+      "as": "ts"
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "max",
+          "field": "ts",
+          "as": "last_ts"
+        }
+      ]
+    },
+    {
+      "filter": "datum.ts === datum.last_ts"
+    },
+    {
+      "calculate": "datum.exposure_kzt / 1e9",
+      "as": "exposure_bn"
+    },
+    {
+      "calculate": "format(datum.portfolio_share, '.1%') + ' · ' + format(datum.exposure_bn, ',.1f') + ' млрд ₸ · заёмщиков: ' + datum.borrowers_count",
+      "as": "bar_label"
+    }
+  ],
+  "width": 520,
+  "height": {
+    "step": 26
+  },
+  "encoding": {
+    "y": {
+      "field": "group_id",
+      "type": "nominal",
+      "title": null,
+      "sort": {
+        "field": "exposure_rank",
+        "op": "min",
+        "order": "ascending"
+      }
+    }
+  },
+  "layer": [
+    {
+      "mark": {
+        "type": "bar",
+        "height": 16,
+        "cornerRadiusEnd": 4,
+        "color": "#2a78d6"
+      },
+      "encoding": {
+        "x": {
+          "field": "portfolio_share",
+          "type": "quantitative",
+          "title": "Доля портфеля",
+          "axis": {
+            "format": ".0%",
+            "tickCount": 5
+          }
+        },
+        "tooltip": [
+          {
+            "field": "group_id",
+            "title": "Группа"
+          },
+          {
+            "field": "exposure_bn",
+            "title": "Экспозиция, млрд ₸",
+            "format": ",.1f"
+          },
+          {
+            "field": "portfolio_share",
+            "title": "Доля портфеля",
+            "format": ".2%"
+          },
+          {
+            "field": "borrowers_count",
+            "title": "Заёмщиков"
+          },
+          {
+            "field": "loans_count",
+            "title": "Кредитов"
+          }
+        ]
+      }
+    },
+    {
+      "mark": {
+        "type": "text",
+        "align": "left",
+        "dx": 6,
+        "fontSize": 11,
+        "color": "#52514e"
+      },
+      "encoding": {
+        "x": {
+          "field": "portfolio_share",
+          "type": "quantitative"
+        },
+        "text": {
+          "field": "bar_label"
+        }
+      }
+    }
+  ]
+}

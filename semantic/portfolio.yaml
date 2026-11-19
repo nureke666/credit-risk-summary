@@ -1,0 +1,80 @@
+# Кредитный портфель на уровне кредита: одна строка — кредит на дату среза, списанные исключены.
+# Все меры аддитивны (суммы в тенге по курсу на дату среза) — их можно резать любым измерением.
+# Доли (PAR30, NPL, концентрация) не аддитивны и живут в модели risk_summary.
+model: portfolio
+source: reporting.v_portfolio
+
+dimensions:
+  - name: report_date
+    column: report_date
+    type: date
+    label: Дата среза
+  - name: sector
+    column: sector
+    type: string
+    label: Отрасль
+  - name: program
+    column: program
+    type: string
+    label: Программа
+  - name: currency
+    column: currency
+    type: string
+    label: Валюта кредита
+  - name: group_id
+    column: group_id
+    type: string
+    label: Группа связанных заёмщиков
+  - name: borrower_id
+    column: borrower_id
+    type: string
+    label: Заёмщик
+  - name: dpd_bucket
+    column: dpd_bucket
+    type: string
+    label: Срок просрочки
+  - name: is_npl
+    column: is_npl
+    type: boolean
+    label: NPL
+  - name: is_restructured
+    column: is_restructured
+    type: boolean
+    label: Реструктуризирован
+
+measures:
+  - name: portfolio_kzt
+    column: principal_kzt
+    type: sum
+    format: ",.0f"
+    label: Портфель, ₸
+  - name: par30_kzt
+    column: par30_kzt
+    type: sum
+    format: ",.0f"
+    label: Просрочка более 30 дней, ₸
+  - name: par90_kzt
+    column: par90_kzt
+    type: sum
+    format: ",.0f"
+    label: Просрочка более 90 дней, ₸
+  - name: npl_kzt
+    column: npl_kzt
+    type: sum
+    format: ",.0f"
+    label: NPL, ₸
+  - name: provisions_kzt
+    column: provision_kzt
+    type: sum
+    format: ",.0f"
+    label: Провизии, ₸
+  - name: loans_count
+    column: loan_id
+    type: count
+    format: ",d"
+    label: Кредитов
+  - name: avg_days_past_due
+    column: days_past_due
+    type: avg
+    format: ",.1f"
+    label: Средняя просрочка, дней

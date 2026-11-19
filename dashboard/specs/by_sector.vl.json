@@ -1,0 +1,235 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Портфель и доли проблемных кредитов по отраслям на последнюю дату среза",
+  "data": {
+    "url": "data/by_segment.json"
+  },
+  "transform": [
+    {
+      "filter": "datum.dimension === 'sector'"
+    },
+    {
+      "calculate": "time(toDate(datum.report_date))",
+      "as": "ts"
+    },
+    {
+      "joinaggregate": [
+        {
+          "op": "max",
+          "field": "ts",
+          "as": "last_ts"
+        }
+      ]
+    },
+    {
+      "filter": "datum.ts === datum.last_ts"
+    },
+    {
+      "calculate": "datum.portfolio_kzt / 1e9",
+      "as": "portfolio_bn"
+    }
+  ],
+  "hconcat": [
+    {
+      "title": "Портфель, млрд ₸",
+      "width": 260,
+      "height": {
+        "step": 34
+      },
+      "encoding": {
+        "y": {
+          "field": "segment",
+          "type": "nominal",
+          "title": null,
+          "sort": {
+            "field": "portfolio_kzt",
+            "op": "sum",
+            "order": "descending"
+          }
+        }
+      },
+      "layer": [
+        {
+          "mark": {
+            "type": "bar",
+            "height": 18,
+            "cornerRadiusEnd": 4,
+            "color": "#2a78d6"
+          },
+          "encoding": {
+            "x": {
+              "field": "portfolio_bn",
+              "type": "quantitative",
+              "title": null,
+              "axis": {
+                "format": ",.0f",
+                "tickCount": 4
+              }
+            },
+            "tooltip": [
+              {
+                "field": "segment",
+                "title": "Сегмент"
+              },
+              {
+                "field": "portfolio_bn",
+                "title": "Портфель, млрд ₸",
+                "format": ",.1f"
+              },
+              {
+                "field": "portfolio_share",
+                "title": "Доля портфеля",
+                "format": ".1%"
+              },
+              {
+                "field": "loans_count",
+                "title": "Кредитов"
+              }
+            ]
+          }
+        },
+        {
+          "mark": {
+            "type": "text",
+            "align": "left",
+            "dx": 4,
+            "fontSize": 11,
+            "color": "#52514e"
+          },
+          "encoding": {
+            "x": {
+              "field": "portfolio_bn",
+              "type": "quantitative"
+            },
+            "text": {
+              "field": "portfolio_bn",
+              "format": ",.1f"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "title": "Доля проблемных кредитов",
+      "width": 360,
+      "height": {
+        "step": 34
+      },
+      "transform": [
+        {
+          "fold": [
+            "par30_share",
+            "par90_share",
+            "npl_share"
+          ],
+          "as": [
+            "metric",
+            "value"
+          ]
+        },
+        {
+          "lookup": "metric",
+          "from": {
+            "data": {
+              "values": [
+                {
+                  "metric": "par30_share",
+                  "label": "PAR30"
+                },
+                {
+                  "metric": "par90_share",
+                  "label": "PAR90"
+                },
+                {
+                  "metric": "npl_share",
+                  "label": "NPL"
+                }
+              ]
+            },
+            "key": "metric",
+            "fields": [
+              "label"
+            ]
+          }
+        }
+      ],
+      "mark": {
+        "type": "point",
+        "filled": true,
+        "size": 90,
+        "stroke": "#fcfcfb",
+        "strokeWidth": 2,
+        "opacity": 1
+      },
+      "encoding": {
+        "y": {
+          "field": "segment",
+          "type": "nominal",
+          "title": null,
+          "sort": {
+            "field": "portfolio_kzt",
+            "op": "sum",
+            "order": "descending"
+          },
+          "axis": {
+            "labels": false,
+            "ticks": false,
+            "domain": false
+          }
+        },
+        "x": {
+          "field": "value",
+          "type": "quantitative",
+          "title": null,
+          "axis": {
+            "format": ".0%",
+            "tickCount": 5
+          }
+        },
+        "color": {
+          "field": "label",
+          "type": "nominal",
+          "title": null,
+          "sort": [
+            "PAR30",
+            "PAR90",
+            "NPL"
+          ],
+          "scale": {
+            "range": [
+              "#2a78d6",
+              "#eb6834",
+              "#1baf7a"
+            ]
+          }
+        },
+        "tooltip": [
+          {
+            "field": "segment",
+            "title": "Сегмент"
+          },
+          {
+            "field": "label",
+            "title": "Показатель"
+          },
+          {
+            "field": "value",
+            "title": "Доля",
+            "format": ".1%"
+          },
+          {
+            "field": "npl_change_pp",
+            "title": "NPL к прошлому срезу, п.п.",
+            "format": "+.1f"
+          }
+        ]
+      }
+    }
+  ],
+  "spacing": 24,
+  "resolve": {
+    "scale": {
+      "color": "independent"
+    }
+  }
+}

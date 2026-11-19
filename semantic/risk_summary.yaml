@@ -1,0 +1,81 @@
+# Риск-сводка: одна строка на дату среза, доли и изменения уже посчитаны в SQL.
+# Доли не складываются между датами: группировать только по report_date (avg по одной строке = значение).
+model: risk_summary
+source: reporting.v_risk_summary
+
+dimensions:
+  - name: report_date
+    column: report_date
+    type: date
+    label: Дата среза
+  - name: prev_report_date
+    column: prev_report_date
+    type: date
+    label: Предыдущий срез
+
+measures:
+  - name: portfolio_kzt
+    column: portfolio_kzt
+    type: sum
+    format: ",.0f"
+    label: Портфель, ₸
+  - name: provisions_kzt
+    column: provisions_kzt
+    type: sum
+    format: ",.0f"
+    label: Провизии, ₸
+  - name: par30_share
+    column: par30_share
+    type: avg
+    format: ".1%"
+    label: PAR30
+  - name: par90_share
+    column: par90_share
+    type: avg
+    format: ".1%"
+    label: PAR90
+  - name: npl_share
+    column: npl_share
+    type: avg
+    format: ".1%"
+    label: NPL
+  - name: top10_share
+    column: top10_share
+    type: avg
+    format: ".1%"
+    label: Доля топ-10 групп
+  - name: portfolio_change_ratio
+    column: portfolio_change_ratio
+    type: avg
+    format: "+.1%"
+    label: Портфель к предыдущему срезу
+  - name: par30_change_pp
+    column: par30_change_pp
+    type: avg
+    format: "+.1f"
+    label: PAR30 к предыдущему срезу, п.п.
+  - name: par90_change_pp
+    column: par90_change_pp
+    type: avg
+    format: "+.1f"
+    label: PAR90 к предыдущему срезу, п.п.
+  - name: npl_change_pp
+    column: npl_change_pp
+    type: avg
+    format: "+.1f"
+    label: NPL к предыдущему срезу, п.п.
+  - name: top10_change_pp
+    column: top10_change_pp
+    type: avg
+    format: "+.1f"
+    label: Топ-10 к предыдущему срезу, п.п.
+  - name: provisions_change_ratio
+    column: provisions_change_ratio
+    type: avg
+    format: "+.1%"
+    label: Провизии к предыдущему срезу
+  - name: loans_count
+    column: loans_count
+    type: sum
+    format: ",d"
+    label: Кредитов

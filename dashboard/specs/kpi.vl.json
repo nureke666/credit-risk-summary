@@ -1,0 +1,80 @@
+{
+  "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+  "description": "Ключевые показатели на последнюю дату среза и изменение к предыдущей",
+  "data": {"url": "data/summary.json"},
+  "transform": [
+    {"filter": "datum.prev_report_date != null"},
+    {
+      "fold": ["portfolio_kzt", "par30_share", "par90_share", "npl_share", "top10_share", "provisions_kzt"],
+      "as": ["metric", "value"]
+    },
+    {
+      "lookup": "metric",
+      "from": {
+        "data": {
+          "values": [
+            {"metric": "portfolio_kzt", "label": "Портфель", "order": 1, "kind": "money", "change_field": "portfolio_change_ratio", "is_risk": false},
+            {"metric": "par30_share", "label": "PAR30", "order": 2, "kind": "share", "change_field": "par30_change_pp", "is_risk": true},
+            {"metric": "par90_share", "label": "PAR90", "order": 3, "kind": "share", "change_field": "par90_change_pp", "is_risk": true},
+            {"metric": "npl_share", "label": "NPL", "order": 4, "kind": "share", "change_field": "npl_change_pp", "is_risk": true},
+            {"metric": "top10_share", "label": "Топ-10 групп", "order": 5, "kind": "share", "change_field": "top10_change_pp", "is_risk": true},
+            {"metric": "provisions_kzt", "label": "Провизии", "order": 6, "kind": "money", "change_field": "provisions_change_ratio", "is_risk": true}
+          ]
+        },
+        "key": "metric",
+        "fields": ["label", "order", "kind", "change_field", "is_risk"]
+      }
+    },
+    {"calculate": "datum[datum.change_field]", "as": "change_raw"},
+    {"calculate": "datum.kind === 'money' ? round(datum.change_raw * 1000) / 1000 : round(datum.change_raw * 10) / 10", "as": "change_rounded"},
+    {"calculate": "datum.change_rounded === 0 ? 0 : datum.change_rounded", "as": "change"},
+    {
+      "calculate": "datum.kind === 'money' ? format(datum.value / 1e9, ',.1f') + ' млрд ₸' : format(datum.value, '.1%')",
+      "as": "value_text"
+    },
+    {
+      "calculate": "(datum.change > 0 ? '▲ ' : datum.change < 0 ? '▼ ' : '') + (datum.kind === 'money' ? format(datum.change, '+.1%') : format(datum.change, '+.1f') + ' п.п.') + ' к ' + utcFormat(toDate(datum.prev_report_date), '%d.%m')",
+      "as": "change_text"
+    },
+    {
+      "calculate": "!datum.is_risk || datum.change === 0 ? 'нейтрально' : datum.change > 0 ? 'хуже' : 'лучше'",
+      "as": "direction"
+    }
+  ],
+  "facet": {
+    "field": "label",
+    "type": "nominal",
+    "sort": {"field": "order", "op": "min"},
+    "title": null,
+    "header": {"labelFontSize": 12, "labelColor": "#52514e", "labelAnchor": "start", "labelPadding": 4}
+  },
+  "columns": 6,
+  "spacing": 12,
+  "spec": {
+    "width": 180,
+    "height": 60,
+    "layer": [
+      {
+        "mark": {"type": "text", "align": "left", "baseline": "middle", "x": 0, "y": 18, "fontSize": 24, "fontWeight": 600, "color": "#0b0b0b"},
+        "encoding": {"text": {"field": "value_text"}}
+      },
+      {
+        "mark": {"type": "text", "align": "left", "baseline": "middle", "x": 0, "y": 48, "fontSize": 12},
+        "encoding": {
+          "text": {"field": "change_text"},
+          "color": {
+            "field": "direction",
+            "type": "nominal",
+            "scale": {"domain": ["хуже", "лучше", "нейтрально"], "range": ["#d03b3b", "#006300", "#52514e"]},
+            "legend": null
+          },
+          "tooltip": [
+            {"field": "label", "title": "Показатель"},
+            {"field": "value_text", "title": "Значение"},
+            {"field": "change_text", "title": "Изменение"}
+          ]
+        }
+      }
+    ]
+  }
+}

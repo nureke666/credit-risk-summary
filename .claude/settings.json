@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(**/.env)",
+      "Read(**/.env.*)",
+      "Read(!.env.example)",
+      "Read(!.env.sample)",
+      "Read(!.env.template)",
+      "Read(!.env.dist)",
+      "Read(**/*.pem)",
+      "Read(**/id_rsa*)",
+      "Read(~/.ssh/**)",
+      "Read(~/.aws/**)",
+      "Read(~/.kube/**)",
+      "Edit(/data/**)",
+      "Write(/data/**)"
+    ],
+    "ask": [
+      "Bash(make down)",
+      "Bash(docker rm:*)",
+      "Bash(make psql)",
+      "Bash(docker exec -it crs-pg psql:*)",
+      "Edit(/Makefile)",
+      "Edit(/sql/90_checks.sql)",
+      "Edit(/scripts/verify.py)",
+      "Edit(/scripts/check_semantic.py)",
+      "Edit(/.claude/settings.json)"
+    ],
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(make check)",
+      "Bash(make load)",
+      "Bash(make export)",
+      "Bash(make verify)",
+      "Bash(make screenshot)",
+      "Bash(python3 scripts/verify.py)",
+      "Bash(python3 scripts/check_semantic.py)",
+      "Read(**)"
+    ]
+  }
+}
